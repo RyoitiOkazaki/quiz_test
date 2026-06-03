@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>マイクイズアプリ</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #0f172a;
+  --border: #334155;
+  --text: #f1f5f9;
+  --muted: #64748b;
+  --accent: #6366f1;
+  --accent2: #8b5cf6;
+  --green: #10b981;
+  --red: #f43f5e;
+  --yellow: #f59e0b;
+  --radius: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+.screen.active { display: flex; }
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.topbar-logo { font-size: 1rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.topbar-logo span { font-size: 1.2rem; }
+.topbar-right { display: flex; gap: 8px; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.icon-btn:hover { background: var(--border); color: var(--text); }
+
+/* ── HOME ── */
+.home-body { flex: 1; padding: 24px 20px; overflow-y: auto; }
+.hero { text-align: center; padding: 32px 0 28px; }
+.hero-icon { font-size: 3rem; margin-bottom: 12px; }
+.hero h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+.hero p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+.section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; }
+
+.topic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 28px; }
+.topic-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.topic-card:hover, .topic-card.selected { border-color: var(--accent); background: #1e1b4b; }
+.topic-card .t-icon { font-size: 1.8rem; margin-bottom: 8px; }
+.topic-card .t-name { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.topic-card .t-count { font-size: 0.72rem; color: var(--muted); }
+
+.ai-box {
+  background: linear-gradient(135deg, #1e1b4b, #1e293b);
+  border: 1px solid #4338ca;
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 28px;
+}
+.ai-box-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ai-badge { background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 6px; padding: 4px 10px; font-size: 0.7rem; font-weight: 700; color: #fff; }
+.ai-box-title { font-size: 0.9rem; font-weight: 700; }
+.ai-box p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+.ai-input-row { display: flex; gap: 8px; }
+.ai-input {
+  flex: 1; padding: 10px 14px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-size: 0.9rem; font-family: inherit;
+}
+.ai-input:focus { outline: none; border-color: var(--accent); }
+.ai-gen-btn {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 10px; color: #fff;
+  font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  white-space: nowrap; transition: opacity 0.15s;
+}
+.ai-gen-btn:hover { opacity: 0.9; }
+.ai-gen-btn:disabled { opacity: 0.5; cursor: default; }
+.ai-result { margin-top: 12px; display: none; }
+.ai-result-label { font-size: 0.75rem; color: #818cf8; margin-bottom: 8px; }
+.ai-q-preview { background: var(--bg); border-radius: 8px; padding: 10px 12px; font-size: 0.8rem; color: var(--muted); line-height: 1.6; max-height: 100px; overflow-y: auto; }
+
+.setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.setting-label { font-size: 0.88rem; color: var(--text); }
+.setting-sub { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.seg { display: flex; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+.seg-btn { padding: 7px 14px; font-size: 0.8rem; font-weight: 700; border: none; background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+.seg-btn.active { background: var(--accent); color: #fff; }
+
+.start-btn {
+  width: 100%; padding: 18px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: var(--radius);
+  color: #fff; font-size: 1.05rem; font-weight: 800;
+  cursor: pointer; transition: transform 0.1s, opacity 0.15s;
+  margin-top: 8px;
+}
+.start-btn:hover { transform: translateY(-2px); opacity: 0.95; }
+.start-btn:active { transform: scale(0.98); }
+
+/* ── QUIZ SCREEN ── */
+.quiz-body { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+
+.progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.progress-bar { flex: 1; height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.4s ease; }
+.q-counter { font-size: 0.82rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+.timer-row { display: flex; justify-content: center; margin-bottom: 24px; }
+.timer-ring { position: relative; width: 64px; height: 64px; }
+.timer-ring svg { position: absolute; top:0; left:0; transform: rotate(-90deg); }
+.timer-ring circle { fill: none; stroke-width: 4; }
+.timer-track { stroke: var(--border); }
+.timer-prog { stroke: var(--green); stroke-linecap: round; transition: stroke-dashoffset 0.9s linear, stroke 0.3s; }
+.timer-num {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 800;
+}
+
+.question-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.q-category { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 10px; }
+.q-text { font-size: 1.05rem; font-weight: 700; line-height: 1.6; }
+
+.options { display: flex; flex-direction: column; gap: 10px; }
+.opt-btn {
+  width: 100%; padding: 16px 18px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  color: var(--text); font-size: 0.95rem; font-weight: 600;
+  text-align: left; cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 12px;
+}
+.opt-btn:hover:not(:disabled) { border-color: var(--accent); background: #1e1b4b; }
+.opt-btn:disabled { cursor: default; }
+.opt-btn.correct { border-color: var(--green); background: rgba(16,185,129,0.1); }
+.opt-btn.wrong { border-color: var(--red); background: rgba(244,63,94,0.1); }
+.opt-letter {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 800; color: var(--muted);
+}
+.opt-btn.correct .opt-letter { background: var(--green); color: #fff; }
+.opt-btn.wrong .opt-letter { background: var(--red); color: #fff; }
+
+.feedback-bar {
+  margin-top: 16px; padding: 14px 18px;
+  border-radius: 12px; font-size: 0.9rem; font-weight: 700;
+  display: none; align-items: center; gap: 10px;
+}
+.feedback-bar.show { display: flex; }
+.feedback-bar.ok { background: rgba(16,185,129,0.15); color: var(--green); }
+.feedback-bar.ng { background: rgba(244,63,94,0.15); color: var(--red); }
+.feedback-icon { font-size: 1.2rem; flex-shrink: 0; }
+.feedback-text { font-size: 0.85rem; line-height: 1.5; }
+
+.next-btn {
+  width: 100%; margin-top: 16px; padding: 15px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 12px;
+  color: #fff; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; display: none;
+  transition: opacity 0.15s;
+}
+.next-btn.show { display: block; }
+.next-btn:hover { opacity: 0.9; }
+
+/* score bar */
+.score-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 6px 12px;
+  font-size: 0.85rem; font-weight: 700;
+}
+.score-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+/* ── RESULT ── */
+.result-body { flex: 1; display: flex; flex-direction: column; padding: 24px 20px; overflow-y: auto; }
+.result-hero { text-align: center; padding: 28px 0 24px; }
+.result-emoji { font-size: 3.5rem; margin-bottom: 10px; }
+.result-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 6px; }
+.result-comment { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+.score-display {
+  background: linear-gradient(135deg, #1e1b4b, #1e293b);
+  border: 1px solid #4338ca;
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center; margin-bottom: 20px;
+}
+.score-big { font-size: 3rem; font-weight: 800; color: #fff; line-height: 1; }
+.score-big span { font-size: 1.3rem; color: var(--accent); }
+.score-sub { font-size: 0.82rem; color: #818cf8; margin-top: 6px; }
+
+.stat-row { display: flex; gap: 10px; margin-bottom: 20px; }
+.stat-box { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
+.stat-num { font-size: 1.4rem; font-weight: 800; }
+.stat-num.g { color: var(--green); }
+.stat-num.r { color: var(--red); }
+.stat-num.y { color: var(--yellow); }
+.stat-label { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+.answer-review { margin-bottom: 24px; }
+.review-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: var(--surface); border-radius: 12px; margin-bottom: 8px; border-left: 3px solid transparent; }
+.review-item.correct { border-left-color: var(--green); }
+.review-item.wrong { border-left-color: var(--red); }
+.review-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.review-text { font-size: 0.82rem; line-height: 1.6; }
+.review-q { font-weight: 700; margin-bottom: 4px; color: var(--text); }
+.review-a { color: var(--muted); }
+.review-a .ok { color: var(--green); font-weight: 700; }
+.review-a .ng { color: var(--red); }
+
+.result-actions { display: flex; flex-direction: column; gap: 10px; }
+.btn-retry {
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: var(--radius);
+  color: #fff; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.btn-retry:hover { opacity: 0.9; }
+.btn-home {
+  width: 100%; padding: 15px;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--muted);
+  font-size: 0.95rem; cursor: pointer; transition: all 0.15s;
+}
+.btn-home:hover { background: var(--surface); color: var(--text); }
+.share-btn {
+  width: 100%; padding: 15px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 0.95rem; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.15s;
+}
+.share-btn:hover { border-color: var(--accent); }
+.share-toast {
+  text-align: center; font-size: 0.82rem; color: var(--green);
+  padding: 10px; display: none;
+}
+
+/* AI loading animation */
+@keyframes spin { to { transform: rotate(360deg); } }
+.ai-loading { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+</style>
+</head>
+<body>
+
+<!-- ─── HOME SCREEN ─── -->
+<div class="screen active" id="screen-home">
+  <div class="topbar">
+    <div class="topbar-logo"><span>🧠</span> マイクイズアプリ</div>
+    <div class="topbar-right">
+      <button class="icon-btn" title="設定">⚙️</button>
+    </div>
+  </div>
+  <div class="home-body">
+    <div class="hero">
+      <div class="hero-icon">🎯</div>
+      <h1>今日も一問、挑戦しよう</h1>
+      <p>テーマを選んで、さっそく始めましょう。</p>
+    </div>
+
+    <div class="section-label">テーマを選ぶ</div>
+    <div class="topic-grid" id="topic-grid"></div>
+
+    <div class="ai-box">
+      <div class="ai-box-top">
+        <div class="ai-badge">✨ AI生成</div>
+        <div class="ai-box-title">好きなテーマで問題を作る</div>
+      </div>
+      <p>テーマを入力すると、AIが問題を自動で作ります。業界知識・資格・趣味——なんでもOK。</p>
+      <div class="ai-input-row">
+        <input class="ai-input" type="text" id="ai-topic-input" placeholder="例：マーケティング基礎、食の雑学…">
+        <button class="ai-gen-btn" id="ai-gen-btn" onclick="generateAI()">生成 ✨</button>
+      </div>
+      <div class="ai-result" id="ai-result">
+        <div class="ai-result-label">✅ AIが5問生成しました——このテーマで挑戦できます</div>
+        <div class="ai-q-preview" id="ai-q-preview"></div>
+      </div>
+    </div>
+
+    <div class="section-label">難易度</div>
+    <div class="setting-row" style="margin-bottom:20px">
+      <div>
+        <div class="setting-label">問題数</div>
+        <div class="setting-sub">多いほど達成感あり</div>
+      </div>
+      <div class="seg" id="seg-count">
+        <button class="seg-btn active" data-val="5" onclick="setSeg('seg-count',this)">5問</button>
+        <button class="seg-btn" data-val="10" onclick="setSeg('seg-count',this)">10問</button>
+        <button class="seg-btn" data-val="15" onclick="setSeg('seg-count',this)">15問</button>
+      </div>
+    </div>
+    <div class="setting-row" style="margin-bottom:28px">
+      <div>
+        <div class="setting-label">制限時間</div>
+        <div class="setting-sub">0でタイムアタックなし</div>
+      </div>
+      <div class="seg" id="seg-time">
+        <button class="seg-btn" data-val="0" onclick="setSeg('seg-time',this)">なし</button>
+        <button class="seg-btn active" data-val="15" onclick="setSeg('seg-time',this)">15秒</button>
+        <button class="seg-btn" data-val="20" onclick="setSeg('seg-time',this)">20秒</button>
+      </div>
+    </div>
+
+    <button class="start-btn" onclick="startQuiz()">▶ スタート</button>
+  </div>
+</div>
+
+<!-- ─── QUIZ SCREEN ─── -->
+<div class="screen" id="screen-quiz">
+  <div class="topbar">
+    <button class="icon-btn" onclick="goHome()">✕</button>
+    <div class="score-chip"><div class="dot"></div><span id="score-chip">0 pt</span></div>
+  </div>
+  <div class="quiz-body">
+    <div class="progress-row">
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="q-counter" id="q-counter">1 / 5</div>
+    </div>
+    <div class="timer-row" id="timer-wrap">
+      <div class="timer-ring">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle class="timer-track" cx="32" cy="32" r="27"/>
+          <circle class="timer-prog" id="timer-prog" cx="32" cy="32" r="27"
+            stroke-dasharray="169.6" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-num" id="timer-num">15</div>
+      </div>
+    </div>
+    <div class="question-card">
+      <div class="q-category" id="q-cat"></div>
+      <div class="q-text" id="q-text"></div>
+    </div>
+    <div class="options" id="options"></div>
+    <div class="feedback-bar" id="feedback">
+      <div class="feedback-icon" id="fb-icon"></div>
+      <div class="feedback-text" id="fb-text"></div>
+    </div>
+    <button class="next-btn" id="next-btn" onclick="nextQ()">次の問題へ →</button>
+  </div>
+</div>
+
+<!-- ─── RESULT SCREEN ─── -->
+<div class="screen" id="screen-result">
+  <div class="topbar">
+    <div class="topbar-logo"><span>🏆</span> 結果</div>
+  </div>
+  <div class="result-body">
+    <div class="result-hero">
+      <div class="result-emoji" id="res-emoji"></div>
+      <div class="result-title" id="res-title"></div>
+      <div class="result-comment" id="res-comment"></div>
+    </div>
+    <div class="score-display">
+      <div class="score-big" id="res-score"></div>
+      <div class="score-sub" id="res-sub"></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num g" id="st-correct">0</div><div class="stat-label">正解</div></div>
+      <div class="stat-box"><div class="stat-num r" id="st-wrong">0</div><div class="stat-label">不正解</div></div>
+      <div class="stat-box"><div class="stat-num y" id="st-acc">0%</div><div class="stat-label">正答率</div></div>
+    </div>
+    <div class="section-label">答え合わせ</div>
+    <div class="answer-review" id="answer-review"></div>
+    <div class="result-actions">
+      <button class="btn-retry" onclick="retryQuiz()">🔄 もう一度挑戦する</button>
+      <button class="share-btn" onclick="shareResult()">📤 結果をシェアする</button>
+      <div class="share-toast" id="share-toast">URLをコピーしました！</div>
+      <button class="btn-home" onclick="goHome()">← テーマ選択に戻る</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── QUESTION BANK ───
+const bank = {
+  biz: {
+    name: 'ビジネス基礎', icon: '💼', color: '#6366f1',
+    qs: [
+      { q: 'PDCAサイクルの「C」が意味するものは？', opts:['チェック（評価）','コスト（費用）','コミュニケーション','キャンセル'], a:0 },
+      { q: 'KPIとは何の略称？', opts:['Key Performance Indicator','Key Process Information','Knowledge & Planning Index','Key Priority Issue'], a:0 },
+      { q: 'OJTとは？', opts:['職場外研修','職場内訓練','目標管理制度','組織改革計画'], a:1 },
+      { q: '「3C分析」の3つのCとは？', opts:['顧客・競合・自社','コスト・品質・納期','コミュニケーション・コラボ・コミット','顧客・コスト・コンテンツ'], a:0 },
+      { q: 'SWOT分析で「T」が表すものは？', opts:['時間','脅威（Threats）','信頼','チームワーク'], a:1 },
+      { q: '「バリューチェーン」とは何の概念？', opts:['価格設定の方法','企業の価値を生む活動の連鎖','顧客との関係管理','投資対効果の計算'], a:1 },
+      { q: 'ROIとは？', opts:['投資収益率','リスク評価指標','業務改善指標','顧客満足度'], a:0 },
+      { q: '「ロジカルシンキング」において「MECE」が意味するのは？', opts:['漏れなく重複なく','最小限のコストで効果最大化','論理的に素早く考える','問題を細分化すること'], a:0 },
+      { q: 'ステークホルダーとは？', opts:['株主のみ','利害関係者全般','経営陣','外部コンサルタント'], a:1 },
+      { q: 'アジャイル開発の特徴として正しいものは？', opts:['全工程を事前に詳細設計','短いサイクルで開発・改善を繰り返す','一度リリースしたら変更しない','ウォーターフォール型とも呼ばれる'], a:1 },
+    ]
+  },
+  ai: {
+    name: 'AI・テクノロジー', icon: '🤖', color: '#8b5cf6',
+    qs: [
+      { q: 'ChatGPTを開発した会社は？', opts:['Google','Meta','OpenAI','Microsoft'], a:2 },
+      { q: 'LLMとは何の略？', opts:['Large Language Model','Light Logic Machine','Linear Learning Method','Local Language Manager'], a:0 },
+      { q: 'バイブコーディングとはどんな手法？', opts:['コードを丸暗記する','AIと対話しながらアプリを作る','バイブス（雰囲気）だけでコードを書く','音声でコードを入力する'], a:1 },
+      { q: 'AIへの指示文のことを何と呼ぶ？', opts:['コマンド','プロンプト','スクリプト','クエリ'], a:1 },
+      { q: 'GitHub Pagesの説明として正しいのは？', opts:['有料のWebサーバーサービス','GitHubのリポジトリからWebサイトを無料公開できる機能','プログラムを自動テストするサービス','AIがコードを自動修正するツール'], a:1 },
+      { q: '「API」とは何を指す言葉？', opts:['アプリ同士が連携するための仕組み','アプリのデザインテンプレート','AIの処理速度の単位','プログラムの設計図'], a:0 },
+      { q: 'HTMLとCSSの関係として正しいのは？', opts:['どちらもデータ分析に使う','HTMLが構造、CSSが見た目を担当','HTMLがサーバー側、CSSがデータベース側','まったく関係ない'], a:1 },
+      { q: '生成AIが「ハルシネーション」を起こすとは？', opts:['処理速度が落ちること','存在しない情報を事実のように生成すること','電力消費が増えること','ユーザーの個人情報を学習すること'], a:1 },
+      { q: 'JavaScriptはどこで動く言語？', opts:['データベースの中','サーバー側のみ','主にWebブラウザ上','OSのカーネル上'], a:2 },
+      { q: 'クラウドサービスの「SaaS」とは？', opts:['ハードウェアを提供するサービス','ソフトウェアをインターネット経由で利用するサービス','セキュリティ専門のサービス','開発者向けAPIサービス'], a:1 },
+    ]
+  },
+  general: {
+    name: '一般常識', icon: '🌏', color: '#10b981',
+    qs: [
+      { q: '日本の首都は？', opts:['大阪','東京','京都','名古屋'], a:1 },
+      { q: 'G7で日本以外のアジアの国は？', opts:['中国','韓国','インド','なし（日本だけ）'], a:3 },
+      { q: '「GDP」が表すのは？', opts:['国の借金総額','国内総生産','政府の予算','貿易収支'], a:1 },
+      { q: '円周率πの近似値は？', opts:['2.718','3.141','1.618','4.669'], a:1 },
+      { q: '国際連合（UN）の本部はどこ？', opts:['ジュネーブ','ブリュッセル','ニューヨーク','パリ'], a:2 },
+      { q: 'SDGsの目標は全部で何個？', opts:['12個','17個','20個','25個'], a:1 },
+      { q: '日本の都道府県は全部でいくつ？', opts:['43','45','47','50'], a:2 },
+      { q: '「ルーブル美術館」がある国は？', opts:['イタリア','スペイン','ドイツ','フランス'], a:3 },
+      { q: '光の速さに最も近いのは？', opts:['約3万km/秒','約30万km/秒','約300万km/秒','約3000万km/秒'], a:1 },
+      { q: '人体の骨の数は大人でおよそ何本？', opts:['106本','206本','306本','406本'], a:1 },
+    ]
+  },
+  marketing: {
+    name: 'マーケティング', icon: '📊', color: '#f59e0b',
+    qs: [
+      { q: 'マーケティングの4Pに含まれないのは？', opts:['Product（製品）','People（人）','Price（価格）','Place（流通）'], a:1 },
+      { q: 'LTVとは？', opts:['顧客生涯価値','広告クリック率','ページ滞在時間','離脱率'], a:0 },
+      { q: 'SEOの目的として最も正確なのは？', opts:['SNS投稿を増やすこと','検索エンジンでの表示順位を上げること','広告費を削減すること','メール開封率を上げること'], a:1 },
+      { q: 'CPA（Cost Per Acquisition）とは？', opts:['クリック単価','顧客獲得単価','ページ表示回数','直帰率'], a:1 },
+      { q: 'A/Bテストとは？', opts:['2つのパターンを比較して効果を検証する手法','売上目標の達成度を測る指標','顧客満足度調査の方法','競合調査のフレームワーク'], a:0 },
+      { q: 'ペルソナとは？', opts:['競合企業の分析','理想の顧客像を人物として具体化したもの','製品の価格設定基準','SNSアカウントの種類'], a:1 },
+      { q: 'カスタマージャーニーとは？', opts:['顧客が商品を認知してから購入・利用するまでの体験の流れ','商品の製造から販売までの流れ','顧客データの収集方法','配送ルートの最適化'], a:0 },
+      { q: 'リターゲティング広告とは？', opts:['初めて訪問した人向けの広告','過去にサイトを訪問した人に再表示する広告','有名人を起用した広告','テレビCMのこと'], a:1 },
+      { q: 'NPS（Net Promoter Score）が測定するのは？', opts:['広告の費用対効果','顧客ロイヤルティ・推奨意向','Webサイトのアクセス数','売上成長率'], a:1 },
+      { q: 'インバウンドマーケティングとは？', opts:['海外からの集客のみを指す','顧客が自ら引き寄せられるようにコンテンツで価値を提供する手法','飛び込み営業の現代版','広告費を増やしてリーチを拡大すること'], a:1 },
+    ]
+  }
+};
+
+// ─── AI-generated question sets (simulated) ───
+const aiPools = {
+  default: [
+    { q: 'バイブコーディングにおいてAIへの指示文を何と呼ぶ？', opts:['スクリプト','プロンプト','コマンド','クエリ'], a:1 },
+    { q: '非エンジニアがバイブコーディングを学ぶ最大のメリットは？', opts:['給与が上がる','エンジニアに頼まずツールを自作できる','プログラミング資格が取れる','コードを高速で書ける'], a:1 },
+    { q: 'HTMLとは何の略？', opts:['HyperText Markup Language','High Tech Machine Learning','HyperText Management Logic','Hybrid Text Modeling Layer'], a:0 },
+    { q: 'GitHub Pagesで公開したアプリは誰がアクセスできる？', opts:['自分のみ','URLを知っている人全員','Githubユーザーのみ','有料会員のみ'], a:1 },
+    { q: 'AIに「コードを追加して」と頼んだ後、まずすべき行動は？', opts:['すぐに次の指示を出す','動作を確認してから次に進む','コードの中身を全部読む','別のAIに同じことを頼む'], a:1 },
+  ]
+};
+
+// ─── STATE ───
+let topics = Object.keys(bank);
+let selectedTopic = 'biz';
+let questionCount = 5;
+let timeLimit = 15;
+let currentQs = [];
+let qIdx = 0;
+let score = 0;
+let correct = 0;
+let answers = [];
+let timerInterval = null;
+let timeLeft = 0;
+let aiQuestions = null;
+let answered = false;
+
+// ─── INIT ───
+function init() {
+  const grid = document.getElementById('topic-grid');
+  grid.innerHTML = '';
+  topics.forEach(key => {
+    const t = bank[key];
+    const d = document.createElement('div');
+    d.className = 'topic-card' + (key === selectedTopic ? ' selected' : '');
+    d.innerHTML = `<div class="t-icon">${t.icon}</div><div class="t-name">${t.name}</div><div class="t-count">${t.qs.length}問収録</div>`;
+    d.onclick = () => { selectedTopic = key; aiQuestions = null; document.getElementById('ai-result').style.display='none'; document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('selected')); d.classList.add('selected'); };
+    grid.appendChild(d);
+  });
+}
+
+function setSeg(groupId, btn) {
+  document.querySelectorAll(`#${groupId} .seg-btn`).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if (groupId === 'seg-count') questionCount = parseInt(btn.dataset.val);
+  if (groupId === 'seg-time') timeLimit = parseInt(btn.dataset.val);
+}
+
+// ─── AI GENERATE (simulated) ───
+async function generateAI() {
+  const topic = document.getElementById('ai-topic-input').value.trim();
+  if (!topic) return;
+  const btn = document.getElementById('ai-gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="ai-loading"></span>';
+  await new Promise(r => setTimeout(r, 1800));
+
+  aiQuestions = aiPools.default.map((q,i) => ({ ...q, _ai: true }));
+  const preview = aiQuestions.map((q,i) => `Q${i+1}. ${q.q}`).join('\n');
+  document.getElementById('ai-q-preview').textContent = preview;
+  document.getElementById('ai-result').style.display = 'block';
+  document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('selected'));
+  selectedTopic = '_ai';
+
+  btn.disabled = false;
+  btn.innerHTML = '再生成 ✨';
+}
+
+// ─── START ───
+function startQuiz() {
+  let pool;
+  if (selectedTopic === '_ai' && aiQuestions) {
+    pool = [...aiQuestions];
+  } else {
+    pool = [...bank[selectedTopic].qs];
+  }
+  pool.sort(() => Math.random() - 0.5);
+  currentQs = pool.slice(0, Math.min(questionCount, pool.length));
+  qIdx = 0; score = 0; correct = 0; answers = [];
+  showScreen('quiz');
+  showQ();
+}
+
+function showQ() {
+  answered = false;
+  const q = currentQs[qIdx];
+  const total = currentQs.length;
+  document.getElementById('prog-fill').style.width = (qIdx / total * 100) + '%';
+  document.getElementById('q-counter').textContent = `${qIdx+1} / ${total}`;
+  document.getElementById('score-chip').textContent = score + ' pt';
+
+  const topicKey = selectedTopic === '_ai' ? 'ai' : selectedTopic;
+  const cat = selectedTopic === '_ai' ? 'AI生成問題' : bank[topicKey]?.name || '';
+  document.getElementById('q-cat').textContent = cat;
+  document.getElementById('q-text').textContent = q.q;
+
+  const opts = document.getElementById('options');
+  const letters = ['A','B','C','D'];
+  opts.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<div class="opt-letter">${letters[i]}</div>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    opts.appendChild(btn);
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback-bar';
+  document.getElementById('next-btn').className = 'next-btn';
+
+  const tw = document.getElementById('timer-wrap');
+  if (timeLimit > 0) {
+    tw.style.display = 'flex';
+    startTimer();
+  } else {
+    tw.style.display = 'none';
+    clearInterval(timerInterval);
+  }
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = timeLimit;
+  updateTimerUI();
+  timerInterval = setInterval(() => {
+    timeLeft -= 0.1;
+    updateTimerUI();
+    if (timeLeft <= 0) { clearInterval(timerInterval); timeUp(); }
+  }, 100);
+}
+
+function updateTimerUI() {
+  const pct = Math.max(timeLeft / timeLimit, 0);
+  const circ = 169.6;
+  document.getElementById('timer-prog').style.strokeDashoffset = circ * (1 - pct);
+  document.getElementById('timer-num').textContent = Math.ceil(Math.max(timeLeft, 0));
+  const el = document.getElementById('timer-prog');
+  el.style.stroke = pct > 0.5 ? '#10b981' : pct > 0.25 ? '#f59e0b' : '#f43f5e';
+}
+
+function timeUp() {
+  if (answered) return;
+  answered = true;
+  const q = currentQs[qIdx];
+  highlightAnswer(q.a, -1);
+  showFeedback(false, `⏰ 時間切れ！正解は「${q.opts[q.a]}」`);
+  answers.push({ q: q.q, selected: -1, correct: q.a, opts: q.opts, ok: false });
+  showNext();
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+  const q = currentQs[qIdx];
+  const ok = idx === q.a;
+  if (ok) { correct++; score += timeLimit > 0 ? Math.max(Math.round(timeLeft / timeLimit * 100), 10) : 100; }
+  highlightAnswer(q.a, idx);
+  showFeedback(ok, ok ? '✅ 正解！' : `❌ 不正解。正解は「${q.opts[q.a]}」`);
+  answers.push({ q: q.q, selected: idx, correct: q.a, opts: q.opts, ok });
+  document.getElementById('score-chip').textContent = score + ' pt';
+  showNext();
+}
+
+function highlightAnswer(correct, selected) {
+  document.querySelectorAll('.opt-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === correct) btn.classList.add('correct');
+    else if (i === selected) btn.classList.add('wrong');
+  });
+}
+
+function showFeedback(ok, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback-bar show ' + (ok ? 'ok' : 'ng');
+  document.getElementById('fb-icon').textContent = ok ? '🎉' : '💡';
+  document.getElementById('fb-text').textContent = msg;
+}
+
+function showNext() {
+  document.getElementById('next-btn').className = 'next-btn show';
+  document.getElementById('next-btn').textContent = qIdx + 1 < currentQs.length ? '次の問題へ →' : '結果を見る 🏆';
+}
+
+function nextQ() {
+  qIdx++;
+  if (qIdx < currentQs.length) showQ();
+  else showResult();
+}
+
+// ─── RESULT ───
+function showResult() {
+  clearInterval(timerInterval);
+  showScreen('result');
+  const total = currentQs.length;
+  const acc = Math.round(correct / total * 100);
+
+  let emoji, title, comment;
+  if (acc === 100) { emoji='🏆'; title='パーフェクト！'; comment='全問正解、お見事です。'; }
+  else if (acc >= 80) { emoji='🎉'; title='すばらしい！'; comment='高スコア。あと少しで満点です。'; }
+  else if (acc >= 60) { emoji='😊'; title='なかなかいい感じ'; comment='半分以上は正解。次回はさらに上を目指して。'; }
+  else if (acc >= 40) { emoji='💪'; title='もう一息！'; comment='苦手な問題を復習してみましょう。'; }
+  else { emoji='📚'; title='これから！'; comment='もう一度挑戦してみてください。'; }
+
+  document.getElementById('res-emoji').textContent = emoji;
+  document.getElementById('res-title').textContent = title;
+  document.getElementById('res-comment').textContent = comment;
+  document.getElementById('res-score').innerHTML = `${score}<span> pt</span>`;
+  document.getElementById('res-sub').textContent = `正答率 ${acc}% ／ ${correct}問正解`;
+  document.getElementById('st-correct').textContent = correct;
+  document.getElementById('st-wrong').textContent = total - correct;
+  document.getElementById('st-acc').textContent = acc + '%';
+
+  const review = document.getElementById('answer-review');
+  review.innerHTML = answers.map(a => `
+    <div class="review-item ${a.ok ? 'correct' : 'wrong'}">
+      <div class="review-icon">${a.ok ? '✅' : '❌'}</div>
+      <div class="review-text">
+        <div class="review-q">${a.q}</div>
+        <div class="review-a">
+          ${a.ok
+            ? `<span class="ok">正解：${a.opts[a.correct]}</span>`
+            : `あなた：<span class="ng">${a.selected >= 0 ? a.opts[a.selected] : '時間切れ'}</span>　正解：<span class="ok">${a.opts[a.correct]}</span>`}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function retryQuiz() {
+  qIdx = 0; score = 0; correct = 0; answers = [];
+  currentQs.sort(() => Math.random() - 0.5);
+  showScreen('quiz');
+  showQ();
+}
+
+function shareResult() {
+  const total = currentQs.length;
+  const acc = Math.round(correct / total * 100);
+  const text = `🧠 クイズ挑戦結果\n正答率 ${acc}% ／ ${correct}/${total}問正解\nスコア: ${score}pt\n\n${location.href}`;
+  if (navigator.share) {
+    navigator.share({ title: 'クイズ結果', text });
+  } else {
+    navigator.clipboard.writeText(text).then(() => {
+      const t = document.getElementById('share-toast');
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 2500);
+    });
+  }
+}
+
+function goHome() { clearInterval(timerInterval); showScreen('home'); }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+init();
+</script>
+</body>
+</html>
